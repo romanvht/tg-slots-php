@@ -133,7 +133,8 @@ class TelegramBot {
         
         $message = "😈 @" . (empty($user['username']) ? $user['first_name'] : $user['username']) . " депнул!\n";
         $message .= "У тебя 10 минут, чтобы 2 раза подряд выбросить 6 на кубике 🎲 \n";
-        $message .= "Если не успеешь - мут на 24 часа.";
+        $message .= "Если не успеешь - рандомный мут от 1 до 24 часов.\n\n";
+        $message .= "Вперед, удачи!";
         
         $this->sendMessage($chatId, $message, ['message_thread_id' => ALLOWED_THREAD_ID]);
     }
@@ -142,7 +143,9 @@ class TelegramBot {
         $this->db->clearUser($user['user_id']);
         $this->db->addWin($user['user_id']);
 
-        $message = "🎲 @" . (empty($user['username']) ? $user['first_name'] : $user['username']) . " успешно выбросил " . REQUIRED_DICE_COUNT . " раза подряд по 6.\nСегодня без мута! 🎉\n\nПобед: <b>" . ($user['wins'] + 1) . "</b> | Поражений: <b>{$user['losses']}</b>";
+        $message = "🎲 @" . (empty($user['username']) ? $user['first_name'] : $user['username']) . " успешно выбросил " . REQUIRED_DICE_COUNT . " раза подряд по 6.\n";
+        $message .= "Сегодня без мута! 🎉\n\n";
+        $message .= "Побед: <b>" . ($user['wins'] + 1) . "</b> | Поражений: <b>{$user['losses']}</b>";
         $this->sendMessage($chatId, $message, ['message_thread_id' => ALLOWED_THREAD_ID]);
 
         $this->handleLeaderCommand($chatId);
@@ -168,31 +171,67 @@ class TelegramBot {
         $this->sendMessage($chatId, $message, ['message_thread_id' => ALLOWED_THREAD_ID]);
     }
     
+    private function randomMuteDuration() {
+        $min = 1;
+        $max = floor(MUTE_DURATION / 3600);
+        $random = random_int($min, $max);
+        
+        return $random * 3600;
+    }
+    
+    private function formatMuteDuration($seconds) {
+        $hours = floor($seconds / 3600);
+        
+        $last = $hours % 10;
+        $lastTwo = $hours % 100;
+        
+        if ($lastTwo >= 11 && $lastTwo <= 14) {
+            return "{$hours} часов";
+        }
+        elseif ($last == 1) {
+            return "{$hours} час";
+        }
+        elseif ($last >= 2 && $last <= 4) {
+            return "{$hours} часа";
+        }
+        else {
+            return "{$hours} часов";
+        }
+    }
+    
     public function processCronJobs() {
         $usersToUnmute = $this->db->getUsersToUnmute();
         foreach ($usersToUnmute as $user) {
             $this->unmuteUser($user);
             $this->db->clearUser($user['user_id']);
   
-            $message = "🔓 @" . (empty($user['username']) ? $user['first_name'] : $user['username']) . " больше не в муте.\nС возвращением!";
+            $message = "🔓 @" . (empty($user['username']) ? $user['first_name'] : $user['username']) . " больше не в муте.\n";
+            $message .= "С возвращением! 🎉 \n\n";
+            $message .= "Побед: <b>{$user['wins']}</b> | Поражений: <b>{$user['losses']}</b>";
             $this->sendMessage($user['chat_id'], $message, ['message_thread_id' => ALLOWED_THREAD_ID]);
         }
         
         $usersToPunish = $this->db->getUsersToPunish();
         foreach ($usersToPunish as $user) {
-            $this->muteUser($user);
-            $this->db->muteUser($user['user_id'], MUTE_DURATION);
+            $duration = $this->randomMuteDuration();
+            $formatted = $this->formatMuteDuration($duration);
+            
+            $this->muteUser($user, $duration);
+            $this->db->muteUser($user['user_id'], $duration);
             $this->db->addLose($user['user_id']);
 
-            $message = "🔒 @" . (empty($user['username']) ? $user['first_name'] : $user['username']) . " не успел выполнить задание.\nГладим траву 24 часа 🌿\n\nПобед: <b>{$user['wins']}</b> | Поражений: <b>" . ($user['losses'] + 1) . "</b>";
+            $message = "🔒 @" . (empty($user['username']) ? $user['first_name'] : $user['username']) . " не успел выполнить задание.\n";
+            $message .= "Гладим траву {$formatted} 🌿 \n\n";
+            $message .= "Побед: <b>{$user['wins']}</b> | Поражений: <b>" . ($user['losses'] + 1) . "</b>";
             $this->sendMessage($user['chat_id'], $message, ['message_thread_id' => ALLOWED_THREAD_ID]);
         }
     }
     
-    private function muteUser($user) {
+    private function muteUser($user, $dur = null) {
         $chatId = $user['chat_id'];
         $userId = $user['user_id'];
-        $untilDate = time() + MUTE_DURATION;
+        $duration = $dur ?? MUTE_DURATION;
+        $untilDate = time() + $duration;
 
         $this->apiRequest('restrictChatMember', [
             'chat_id' => $chatId,
