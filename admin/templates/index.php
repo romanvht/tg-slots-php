@@ -68,7 +68,8 @@
                     <th>📊 Всего игр</th>
                     <th>📈 % побед</th>
                     <th>Выигрыш в слоты</th>
-                    <th>Шестерок подряд</th>
+                    <th>Шестерок</th>
+                    <th>Попытка</th>
                     <th>Мут до</th>
                     <th>Действия</th>
                 </tr>
@@ -109,6 +110,7 @@
                             <?php endif; ?>
                         </td>
                         <td><?= $user['consecutive_sixes'] ?? 0; ?></td>
+                        <td><?= $user['dice_attempts'] ?? 0; ?></td>
                         <td class="time">
                             <?php if ($user['muted_until']): ?>
                                 <?= date('Y-m-d H:i:s', $user['muted_until']); ?>

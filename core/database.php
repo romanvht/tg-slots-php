@@ -21,7 +21,7 @@ class Database {
                 username TEXT,
                 first_name TEXT,
                 last_name TEXT,
-                chat_id INTEGER NOT NULL,
+                dice_attempts INTEGER DEFAULT 0,
                 slot_win_time INTEGER DEFAULT NULL,
                 consecutive_sixes INTEGER DEFAULT 0,
                 last_dice_time INTEGER DEFAULT NULL,
@@ -41,7 +41,7 @@ class Database {
         return $result->fetchArray(SQLITE3_ASSOC);
     }
     
-    public function createUser($userData, $chatId) {
+    public function createUser($userData) {
         $existingUser = $this->getUser($userData['id']);
         if ($existingUser) {
             return $existingUser;
@@ -60,7 +60,6 @@ class Database {
         $stmt->bindValue(':username', $userData['username'] ?? '', SQLITE3_TEXT);
         $stmt->bindValue(':first_name', $userData['first_name'] ?? '', SQLITE3_TEXT);
         $stmt->bindValue(':last_name', $userData['last_name'] ?? '', SQLITE3_TEXT);
-        $stmt->bindValue(':chat_id', $chatId, SQLITE3_INTEGER);
         $stmt->bindValue(':created_at', $time, SQLITE3_INTEGER);
         $stmt->bindValue(':updated_at', $time, SQLITE3_INTEGER);
         
@@ -119,7 +118,8 @@ class Database {
             'slot_win_time' => $time,
             'muted_until' => null,
             'consecutive_sixes' => 0,
-            'last_dice_time' => null
+            'last_dice_time' => null,
+            'dice_attempts' => 0
         ]);
     }
 
@@ -129,7 +129,8 @@ class Database {
             'muted_until' => $muteUntil,
             'slot_win_time' => null,
             'consecutive_sixes' => 0,
-            'last_dice_time' => null
+            'last_dice_time' => null,
+            'dice_attempts' => 0
         ]);
     }
     
@@ -138,7 +139,8 @@ class Database {
             'slot_win_time' => null,
             'muted_until' => null,
             'consecutive_sixes' => 0,
-            'last_dice_time' => null
+            'last_dice_time' => null,
+            'dice_attempts' => 0
         ]);
     }
     
