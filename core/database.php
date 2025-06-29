@@ -50,9 +50,9 @@ class Database {
         $time = time();
         $stmt = $this->db->prepare('
             INSERT INTO users (
-                user_id, username, first_name, last_name, chat_id, wins, losses, created_at, updated_at
+                user_id, username, first_name, last_name, wins, losses, created_at, updated_at
             ) VALUES (
-                :user_id, :username, :first_name, :last_name, :chat_id, 0, 0, :created_at, :updated_at
+                :user_id, :username, :first_name, :last_name, 0, 0, :created_at, :updated_at
             )
         ');
         

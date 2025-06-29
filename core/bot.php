@@ -304,6 +304,10 @@ class TelegramBot {
         return $this->apiRequest('setWebhook', ['url' => WEBHOOK_URL]);
     }
 
+    public function delWebhook() {
+        return $this->apiRequest('deleteWebhook', ['drop_pending_updates' => true]);
+    }
+
     public function close() {
         $this->db->close();
     }
